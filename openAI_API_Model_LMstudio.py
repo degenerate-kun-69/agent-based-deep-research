@@ -66,18 +66,15 @@ research_llm = ChatOpenAI(
     openai_api_key="lm-studio", # LM Studio API key
     temperature=0.2,
     max_tokens=512, #reduced tokens to 512 to avoid long outputs
-    top_k=50,
-    top_p=0.8,
+    model_kwargs={"top_p": 0.8, "top_k": 50}, # syntax error fixed where accidentally passed top_p and top_k as parameters instead of model_kwargs
 )
-
 drafting_llm = ChatOpenAI(
     model="zephyr-7b-beta", # LM Studio model name
     openai_api_base=LM_STUDIO_BASE_URL, # LM Studio API base URL
     openai_api_key="lm-studio", # LM Studio API key
     temperature=0.2,
     max_tokens=512, #reduced tokens to 512 to avoid long outputs
-    top_k=50,
-    top_p=0.8,
+    model_kwargs={"top_p": 0.8, "top_k": 50}, # syntax error fixed where accidentally passed top_p and top_k as parameters instead of model_kwargs
 )
 # Research Agent Setup
 research_tools = [
