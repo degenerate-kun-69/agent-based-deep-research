@@ -1,16 +1,16 @@
 import os
-from dotenv import load_dotenv
+from dotenv import load_dotenv #type: ignore
 import requests
-from fpdf import FPDF
+from fpdf import FPDF #type: ignore
 from typing import TypedDict
 
 # Updated LangChain imports with output parser for fixing output issues to pdf format
-from langchain.agents.output_parsers import ReActSingleInputOutputParser
-from langchain_huggingface import HuggingFaceEndpoint
+from langchain.agents.output_parsers import ReActSingleInputOutputParser # type: ignore
+from langchain_huggingface import HuggingFaceEndpoint #type: ignore
 # from langchain_community.llms import HuggingFaceHub -------- Deprecated
-from langchain_core.prompts import PromptTemplate
-from langchain.agents import Tool, create_react_agent, AgentExecutor
-from langgraph.graph import StateGraph, END
+from langchain_core.prompts import PromptTemplate #type: ignore
+from langchain.agents import Tool, create_react_agent, AgentExecutor #type: ignore
+from langgraph.graph import StateGraph, #type: ignore
 
 # Load environment variables
 load_dotenv()
@@ -224,7 +224,7 @@ workflow.set_entry_point("input_query")
 workflow.add_edge("input_query", "conduct_research")
 workflow.add_edge("conduct_research", "draft_answer")
 workflow.add_edge("draft_answer", "export_pdf")
-workflow.add_edge("export_pdf", END)
+workflow.add_edge("export_pdf", END) #type: ignore
 
 app = workflow.compile()
 
