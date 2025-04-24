@@ -6,7 +6,7 @@ from typing import TypedDict
 
 
 # openAI API compatibility (Using LMstudio)
-from langchain.community.chat_models import ChatOpenAI
+from langchain_community.chat_models import ChatOpenAI
 LM_STUDIO_BASE_URL="http://localhost:1234/v1"  # LM Studio API base URL
 # Updated LangChain imports with output parser for fixing output issues to pdf format
 from langchain_core.output_parsers import BaseOutputParser
