@@ -51,100 +51,77 @@ A dual-model research automation system that combines web crawling with AI analy
 
 ## Installation
 
-bash
-# Clone repository
-git clone [your-repo-url]
-cd project-directory
+### Clone repository
+`git clone https://github.com/degenerate-kun-69/agent-based-deep-research`
+`cd agent-based-deep-research`
 
-# Install dependencies
-pip install -r requirements.txt
+### Install dependencies
+`pip install -r requirements.txt`
 
-# Set up environment
-cp .env.example .env
-Configuration
-Obtain API keys:
+### Configuration
+1. Obtain API keys:
+ Tavily: https://app.tavily.com/
+ Hugging Face: https://huggingface.co/settings/tokens
 
-Tavily: https://app.tavily.com/
+2. Create and Edit .env:
+ TAVILY_API_KEY=your_tavily_key
+ HUGGINGFACE_API_KEY=your_hf_token
 
-Hugging Face: https://huggingface.co/settings/tokens
+#### For LM Studio:
+1. Follow instructions at https://lmstudio.ai/
+2. Install `zephyr-7B-beta` from models
+3. Run local inference server on port 1234
 
-Edit .env:
+## Usage
+### Hugging Face Cloud Version
+`python huggingFaceAPI_model.py`
+### LM Studio Local Version
+`python openAI_API_Model_LMstudio.py`
+### LM Studio Validation
+`python lmstudio_api_test.py`
 
-ini
-TAVILY_API_KEY=your_tavily_key
-HUGGINGFACE_API_KEY=your_hf_token
-For LM Studio:
+## Requirements
+1. Python 3.12
+2. Tavily API key (free tier available)
+3. Hugging Face Hub access token
+4. LM Studio (for local version)
+5. 16GB+ RAM for local model operation
 
-Download model: https://lmstudio.ai/
+## Troubleshooting
+### Model Access Issues
+1. Verify Hugging Face model permissions
 
-Run local inference server on port 1234
+2. Check LM Studio server status
 
-Usage
-Hugging Face Cloud Version
-bash
-python huggingFaceAPI_model.py
-LM Studio Local Version
-bash
-python openAI_API_Model_LMstudio.py
-LM Studio Validation
-bash
-python lmstudio_api_test.py
-Requirements
-Python 3.9+
+### API Errors
 
-Tavily API key (free tier available)
+1. Validate .env file formatting
 
-Hugging Face Hub access token
+2. Confirm network connectivity
 
-LM Studio (for local version)
+### PDF Generation
 
-4GB+ RAM for local model operation
+1. Ensure write permissions in /output
 
-Troubleshooting
-Model Access Issues
+2. Check for special characters in content
 
-Verify Hugging Face model permissions
+## Security Notes
+- API keys never committed to version control
+- Local model operations stay on-device
+- Tavily API requests encrypted via HTTPS
 
-Check LM Studio server status
-
-API Errors
-
-Validate .env file formatting
-
-Confirm network connectivity
-
-PDF Generation
-
-Ensure write permissions in /output
-
-Check for special characters in content
-
-Security Notes
-API keys never committed to version control
-
-Local model operations stay on-device
-
-Tavily API requests encrypted via HTTPS
-
-Disclaimer
-This system requires responsible use:
-
-Verify generated facts with original sources
-
-Adhere to target websites' robots.txt
-
-Comply with Hugging Face's Model License
-
-Monitor API usage quotas
-
+# Disclaimer
+## This system requires responsible use:
+- Verify generated facts with original sources
+- Adhere to target websites' robots.txt
+- Comply with Hugging Face's Model License
+- Monitor API usage quotas
 For research purposes only. Not responsible for output accuracy.
 
 
 This README provides:
-1. Clear technical overview without jargon
+1. Clear technical overview
 2. Step-by-step setup instructions
 3. Architecture documentation
 4. Usage scenarios for both versions
 5. Important compliance information
-
-The structure balances conciseness with technical completeness while maintaining professional tone.
