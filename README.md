@@ -60,11 +60,15 @@ A dual-model research automation system that combines web crawling with AI analy
 
 ### Configuration
 1. Obtain API keys:
+
  Tavily: https://app.tavily.com/
+
  Hugging Face: https://huggingface.co/settings/tokens
 
 2. Create and Edit .env:
+
  TAVILY_API_KEY=your_tavily_key
+
  HUGGINGFACE_API_KEY=your_hf_token
 
 #### For LM Studio:
@@ -116,7 +120,8 @@ A dual-model research automation system that combines web crawling with AI analy
 - Adhere to target websites' robots.txt
 - Comply with Hugging Face's Model License
 - Monitor API usage quotas
-For research purposes only. Not responsible for output accuracy.
+
+For research purposes only. Not responsible for output accuracy. 
 
 
 This README provides:
