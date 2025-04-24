@@ -4,25 +4,10 @@ import requests
 from fpdf import FPDF
 from typing import TypedDict
 
-
-#new template for llm
-"""
-# Initialize Hugging Face model using updated class and pass parameters explicitly
-
-research_llm = HuggingFaceEndpoint(
-    repo_id="google/flan-t5-large",  # Your model of choice
-    temperature=0.5,  # Pass temperature directly
-    max_new_tokens=300,  # Pass max_new_tokens directly
-    huggingfacehub_api_token=HF_TOKEN  # Provide the API token
-)
-
-"""
 # Updated LangChain imports with output parser for fixing output issues to pdf format
-from langchain_core.output_parsers import BaseOutputParser
 from langchain.agents.output_parsers import ReActSingleInputOutputParser
 from langchain_huggingface import HuggingFaceEndpoint
 # from langchain_community.llms import HuggingFaceHub -------- Deprecated
-from langchain_community.chat_models.huggingface import ChatHuggingFace
 from langchain_core.prompts import PromptTemplate
 from langchain.agents import Tool, create_react_agent, AgentExecutor
 from langgraph.graph import StateGraph, END
@@ -97,34 +82,33 @@ research_tools = [
 ]
 
 
-#research_prompt = PromptTemplate.from_template(
-#    """[System] You are an AI research analyst. Investigate: {query}
-#    
-#   Steps:
-#    1. Use DeepWebSearch tool
-#    2. Analyze multiple perspectives
-#    3. Identify key facts with sources
-#   
-#   [Assistant] Let's research this step-by-step:"""
-#)
-
-
 # Updated research prompt with tools and agent scratchpad to fix error
-research_prompt = PromptTemplate.from_template(
-    """[System] You are an AI research analyst. Conduct thorough investigation of:
-"{query}" 
+research_prompt = PromptTemplate.from_template( # fixed prompt template to use the correct format
+    """[System] You are an AI research analyst. Your job is to thoroughly investigate and answer the user query using appropriate tools.
 
-Follow these steps:
-1. Use DeepWebSearch to gather information
-2. Analyze multiple perspectives
-3. Identify key facts and sources
-4. Prepare raw research data
+You must always respond using this format:
+Thought: <your reasoning about which tool to use>
+Action: <tool_name>
+Action Input: <input for the selected tool>
 
-[Tools] {tools}  # Include the tools variable here
-[Tool Names] {tool_names}  # Include the tool_names variable here
-[Agent Scratchpad] {agent_scratchpad}  # Include the agent_scratchpad variable here
+Example:
+Thought: The query is about future trends, so a search engine is appropriate.
+Action: WebSearch
+Action Input: "next possible stock shortage"
 
-[Assistant] Let's research this step-by-step. First, I'll use the DeepWebSearch tool."""
+Follow these steps for every query:
+1. Use the appropriate research tool (e.g., DeepWebSearch)
+2. Analyze information from multiple perspectives
+3. Identify and extract key facts and credible sources
+4. Provide raw research data to the next agent
+
+[Tools] {tools}
+[Tool Names] {tool_names}
+[Agent Scratchpad] {agent_scratchpad}
+
+Question: {query}
+
+[Assistant] Let's research this step-by-step. First, I'll decide the best tool to begin with."""
 )
 
 
@@ -136,18 +120,26 @@ research_executor = AgentExecutor(agent=research_agent, tools=research_tools, ve
 # ======================
 
 drafting_prompt = PromptTemplate.from_template(
-    """[System] Create a professional report from this research:
-    
-    Topic: {query}
-    Data: {research_data}
-    
-    Structure:
-    1. Executive Summary
-    2. Key Findings with Sources
-    3. Analysis
-    4. Conclusions
-    
-    [Assistant] Here's the structured report:"""
+    """[System] You are an AI writing assistant. Your task is to generate a well-structured and professional report based on the research data provided.
+
+Topic: {query}
+
+Raw Research Data:
+{research_data}
+
+Guidelines:
+- Maintain a formal tone suitable for professional or academic use.
+- Summarize and analyze key insights accurately.
+- Cite important sources when referencing facts.
+- Ensure clarity and logical flow in each section.
+
+Structure:
+1. Executive Summary
+2. Key Findings (with brief source mentions)
+3. Analysis & Insights
+4. Conclusion & Recommendations
+
+[Assistant] Here's the structured report:"""
 )
 
 drafting_chain = drafting_prompt | drafting_llm
@@ -211,8 +203,6 @@ def conduct_research(state: ResearchState):
     result = research_executor.invoke({"query": state["query"]}) #fixed another syntax error for input
     # fallback if "output" key is missing
     output = result.get("output") if isinstance(result, dict) else str(result)
-    #return {"research_data": output}
-    #return {"research_data": result["output"]}
     # apply output parser to the result
     parsed_result = parse_output(result["output"])
     return {"research_data": parsed_result["action_input"]} #send parsed output 

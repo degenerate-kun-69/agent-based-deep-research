@@ -9,11 +9,8 @@ from typing import TypedDict
 from langchain_community.chat_models import ChatOpenAI
 LM_STUDIO_BASE_URL="http://localhost:1234/v1"  # LM Studio API base URL
 # Updated LangChain imports with output parser for fixing output issues to pdf format
-from langchain_core.output_parsers import BaseOutputParser
 from langchain.agents.output_parsers import ReActSingleInputOutputParser
-from langchain_huggingface import HuggingFaceEndpoint
 # from langchain_community.llms import HuggingFaceHub -------- Deprecated
-from langchain_community.chat_models.huggingface import ChatHuggingFace
 from langchain_core.prompts import PromptTemplate
 from langchain.agents import Tool, create_react_agent, AgentExecutor
 from langgraph.graph import StateGraph, END
@@ -21,7 +18,6 @@ from langgraph.graph import StateGraph, END
 # Load environment variables
 load_dotenv()
 TAVILY_API_KEY = os.getenv("TAVILY_API_KEY")
-HF_TOKEN = os.getenv("HUGGINGFACE_API_KEY")
 
 # ======================
 # State Schema Definition
@@ -66,15 +62,16 @@ research_llm = ChatOpenAI(
     openai_api_key="lm-studio", # LM Studio API key
     temperature=0.2,
     max_tokens=512, #reduced tokens to 512 to avoid long outputs
-    model_kwargs={"top_p": 0.8, "top_k": 50}, # syntax error fixed where accidentally passed top_p and top_k as parameters instead of model_kwargs
+    #removed top_p and top_k parameters as they are not supported in this version
 )
+
 drafting_llm = ChatOpenAI(
     model="zephyr-7b-beta", # LM Studio model name
     openai_api_base=LM_STUDIO_BASE_URL, # LM Studio API base URL
     openai_api_key="lm-studio", # LM Studio API key
     temperature=0.2,
     max_tokens=512, #reduced tokens to 512 to avoid long outputs
-    model_kwargs={"top_p": 0.8, "top_k": 50}, # syntax error fixed where accidentally passed top_p and top_k as parameters instead of model_kwargs
+    #removed top_p and top_k parameters as they are not supported in this version
 )
 # Research Agent Setup
 research_tools = [
@@ -85,60 +82,65 @@ research_tools = [
     )
 ]
 
-
-#research_prompt = PromptTemplate.from_template(
-#    """[System] You are an AI research analyst. Investigate: {query}
-#    
-#   Steps:
-#    1. Use DeepWebSearch tool
-#    2. Analyze multiple perspectives
-#    3. Identify key facts with sources
-#   
-#   [Assistant] Let's research this step-by-step:"""
-#)
-
-
 # Updated research prompt with tools and agent scratchpad to fix error
 research_prompt = PromptTemplate.from_template(
-    """[System] You are an AI research analyst. Conduct thorough investigation of:
-"{query}" 
+    """[System] You are an AI research analyst. Your job is to thoroughly investigate and answer the user query using appropriate tools.
 
-Follow these steps:
-1. Use DeepWebSearch to gather information
-2. Analyze multiple perspectives
-3. Identify key facts and sources
-4. Prepare raw research data
+You must always respond using this format:
+Thought: <your reasoning about which tool to use>
+Action: <tool_name>
+Action Input: <input for the selected tool>
 
-[Tools] {tools}  # Include the tools variable here
-[Tool Names] {tool_names}  # Include the tool_names variable here
-[Agent Scratchpad] {agent_scratchpad}  # Include the agent_scratchpad variable here
+Example:
+Thought: The query is about future trends, so a search engine is appropriate.
+Action: WebSearch
+Action Input: "next possible stock shortage"
 
-[Assistant] Let's research this step-by-step. First, I'll use the DeepWebSearch tool."""
+Follow these steps for every query:
+1. Use the appropriate research tool (e.g., DeepWebSearch)
+2. Analyze information from multiple perspectives
+3. Identify and extract key facts and credible sources
+4. Provide raw research data to the next agent
+
+[Tools] {tools}
+[Tool Names] {tool_names}
+[Agent Scratchpad] {agent_scratchpad}
+
+Question: {query}
+
+[Assistant] Let's research this step-by-step. First, I'll decide the best tool to begin with."""
 )
 
 
 research_agent = create_react_agent(research_llm, research_tools, research_prompt)
-research_executor = AgentExecutor(agent=research_agent, tools=research_tools, verbose=True)
+research_executor = AgentExecutor(agent=research_agent, tools=research_tools, verbose=True, handle_parsing_errors=True)
 
 # ======================
 # Drafting Agent System
 # ======================
 
 drafting_prompt = PromptTemplate.from_template(
-    """[System] Create a professional report from this research:
-    
-    Topic: {query}
-    Data: {research_data}
-    
-    Structure:
-    1. Executive Summary
-    2. Key Findings with Sources
-    3. Analysis
-    4. Conclusions
-    
-    [Assistant] Here's the structured report:"""
-)
+    """[System] You are an AI writing assistant. Your task is to generate a well-structured and professional report based on the research data provided.
 
+Topic: {query}
+
+Raw Research Data:
+{research_data}
+
+Guidelines:
+- Maintain a formal tone suitable for professional or academic use.
+- Summarize and analyze key insights accurately.
+- Cite important sources when referencing facts.
+- Ensure clarity and logical flow in each section.
+
+Structure:
+1. Executive Summary
+2. Key Findings (with brief source mentions)
+3. Analysis & Insights
+4. Conclusion & Recommendations
+
+[Assistant] Here's the structured report:"""
+)
 drafting_chain = drafting_prompt | drafting_llm
 
 # =====================
@@ -200,8 +202,6 @@ def conduct_research(state: ResearchState):
     result = research_executor.invoke({"query": state["query"]}) #fixed another syntax error for input
     # fallback if "output" key is missing
     output = result.get("output") if isinstance(result, dict) else str(result)
-    #return {"research_data": output}
-    #return {"research_data": result["output"]}
     # apply output parser to the result
     parsed_result = parse_output(result["output"])
     return {"research_data": parsed_result["action_input"]} #send parsed output 
