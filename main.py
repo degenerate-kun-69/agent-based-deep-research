@@ -4,6 +4,7 @@ import requests
 from fpdf import FPDF
 from typing import TypedDict
 
+
 #new template for llm
 """
 # Initialize Hugging Face model using updated class and pass parameters explicitly
@@ -65,7 +66,7 @@ def tavily_search(query: str) -> str:
 
 # Initialize HF models with updated parameters
 research_llm = HuggingFaceEndpoint( ##switch to HuggingFaceEndpoint because HuggingFaceHub is deprecated with updated syntax
-    repo_id="google/zephyr-7b-beta",
+    repo_id="HuggingFaceH4/zephyr-7b-beta", # fixed accidental repo_id call to google
     temperature=0.2,
     max_new_tokens=1024,
     top_k=50,
@@ -107,7 +108,7 @@ research_tools = [
 # Updated research prompt with tools and agent scratchpad to fix error
 research_prompt = PromptTemplate.from_template(
     """[System] You are an AI research analyst. Conduct thorough investigation of:
-"{query}"
+"{query}" 
 
 Follow these steps:
 1. Use DeepWebSearch to gather information
@@ -177,13 +178,21 @@ def export_to_pdf(state: ResearchState):
 # =====================
 workflow = StateGraph(state_schema=ResearchState) #fixed a syntax error
 
-
+# fixed input_query function to use state["query"] instead of input()
+"""
 def input_query(state: ResearchState):
     return {"query": input("Enter research topic: ")}
+"""
+def input_query(state: ResearchState):
+    return {"query": state["query"]}
+
 
 def conduct_research(state: ResearchState):
-    result = research_executor.invoke({"input": state["query"]})
-    return {"research_data": result["output"]}
+    result = research_executor.invoke({"query": state["query"]}) #fixed another syntax error for input
+    # fallback if "output" key is missing
+    output = result.get("output") if isinstance(result, dict) else str(result)
+    return {"research_data": output}
+    #return {"research_data": result["output"]}
 
 def draft_answer(state: ResearchState):
     response = drafting_chain.invoke({
