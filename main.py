@@ -17,7 +17,9 @@ research_llm = HuggingFaceEndpoint(
 )
 
 """
-# Updated LangChain imports
+# Updated LangChain imports with output parser for fixing output issues to pdf format
+from langchain_core.output_parsers import BaseOutputParser
+from langchain.agents.output_parsers import ReActSingleInputOutputParser
 from langchain_huggingface import HuggingFaceEndpoint
 # from langchain_community.llms import HuggingFaceHub -------- Deprecated
 from langchain_community.chat_models.huggingface import ChatHuggingFace
@@ -64,23 +66,25 @@ def tavily_search(query: str) -> str:
     except Exception as e:
         return f"Research error: {str(e)}"
 
+# ======================
 # Initialize HF models with updated parameters
+# ======================
 research_llm = HuggingFaceEndpoint( ##switch to HuggingFaceEndpoint because HuggingFaceHub is deprecated with updated syntax
     repo_id="HuggingFaceH4/zephyr-7b-beta", # fixed accidental repo_id call to google
     temperature=0.2,
-    max_new_tokens=1024,
+    max_new_tokens=512, #reduced tokens to 512 to avoid long outputs
     top_k=50,
     top_p=0.8,
-    huggingfacehub_api_token=HF_TOKEN
+    huggingfacehub_api_token=HF_TOKEN,
 )
 
 drafting_llm = HuggingFaceEndpoint( ##switch to HuggingFaceEndpoint because HuggingFaceHub is deprecated with updated syntax
     repo_id="HuggingFaceH4/zephyr-7b-beta",
-        temperature= 0.3,
-        max_new_tokens= 1024,
-        top_k= 50,
-        top_p= 0.8,
-    huggingfacehub_api_token=HF_TOKEN
+    temperature= 0.3,
+    max_new_tokens= 512, #reduced tokens to 512 to avoid long outputs
+    top_k= 50,
+    top_p= 0.8,
+    huggingfacehub_api_token=HF_TOKEN,
 )
 
 # Research Agent Setup
@@ -154,6 +158,8 @@ drafting_chain = drafting_prompt | drafting_llm
 
 def export_to_pdf(state: ResearchState):
     try:
+        output_dir = "output" #send pdf to output folder
+        os.makedirs(output_dir, exist_ok=True) #ensure directory exists
         pdf = FPDF()
         pdf.add_page()
         pdf.set_font("Arial", size=12)
@@ -186,13 +192,30 @@ def input_query(state: ResearchState):
 def input_query(state: ResearchState):
     return {"query": state["query"]}
 
+# Manually use the output parser after getting model output
+def parse_output(model_output: str) -> dict:
+    try:
+        # Attempt ReAct-style parsing
+        return ReActSingleInputOutputParser().parse(model_output)
+    except Exception as e:
+        # If ReAct parsing fails, log the error and return a default action
+        print(f"ReAct parsing failed with error: {e}")
+        return {
+            "thought": "LLM returned full answer",
+            "action": "FinalAnswer",
+            "action_input": model_output.strip()
+        }
+    
 
 def conduct_research(state: ResearchState):
     result = research_executor.invoke({"query": state["query"]}) #fixed another syntax error for input
     # fallback if "output" key is missing
     output = result.get("output") if isinstance(result, dict) else str(result)
-    return {"research_data": output}
+    #return {"research_data": output}
     #return {"research_data": result["output"]}
+    # apply output parser to the result
+    parsed_result = parse_output(result["output"])
+    return {"research_data": parsed_result["action_input"]} #send parsed output 
 
 def draft_answer(state: ResearchState):
     response = drafting_chain.invoke({
@@ -217,4 +240,5 @@ app = workflow.compile()
 
 # Run the system
 if __name__ == "__main__":
-    app.invoke({"query": ""})
+    user_query = input("Enter your research topic: ")# forgot to add user input for query XD
+    app.invoke({"query": user_query})
