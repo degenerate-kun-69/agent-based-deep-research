@@ -1,4 +1,4 @@
-# AI Research Agent System
+# Deep Research Dual AI Agent System
 
 A dual-model research automation system that combines web crawling with AI analysis to generate comprehensive research reports. Supports both cloud-based Hugging Face models and local LM Studio deployments.
 
@@ -48,6 +48,80 @@ A dual-model research automation system that combines web crawling with AI analy
    - PDF export with proper formatting
    - Error-logged output validation
    - File system organization
+
+
+### 1. huggingFaceAPI_model.py
+
+#### Code Flow
+1. **Initialization**
+   - Load environment variables
+   - Define `ResearchState` TypedDict
+   - Configure HuggingFaceEndpoint models
+
+2. **Tavily Integration**
+   ```python
+   def tavily_search(query: str) -> str:
+       # API call structure
+       # Results processing
+       return formatted_results
+
+3. **Agent System**
+
+   - Reasearch Agent (Zephyr-7B-Beta) :
+      - Uses ReAct pattern
+      - Tool: `DeepWebSearch`
+      - Output parsing via `ReActSingleInputOutputParser`
+   - Drafting Agent (Zephyr-7B-Beta) :
+      - Structured report generation
+      - Academic formatting constraints
+
+4. **LangGraph Workflow**
+   ![alt text](langgraphdiagram.png)
+
+#### Key Components
+
+State Management: ResearchState tracks:
+
+User query
+
+Raw research data
+
+Final formatted answer
+
+#### Error Handling:
+
+API call timeouts
+
+Output parsing fallbacks
+
+PDF write protections
+
+---
+
+### 2. openAI_API_Model_LMstudio.py
+
+
+#### Code Flow
+1. Local Model Configuration:
+   ```python
+   ChatOpenAI(
+    openai_api_base="http://localhost:1234/v1",
+    model="zephyr-7b-beta"
+   )
+
+**Note** : this code block in the file can be replaced with the openAI API to use their paid service.
+
+2. Adapted Workflow : 
+
+   - Same code structure as `huggingFaceAPI_model.py`, Modified to work with LMstudio/OpenAI API
+   - Local Network calls instead of HTTP requests
+
+3. LM Studio Specifics : 
+   
+   - Requires Local Model Serving
+   - No external model dependencies
+
+--- 
 
 ## Installation
 
