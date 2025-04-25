@@ -30,7 +30,7 @@ A dual-model research automation system that combines web crawling with AI analy
    - Initializes LangGraph state machine
 
 2. **Research Phase**
-   - Tavily API web crawling (10+ sources)
+   - Tavily API web crawling (10 sources)
    - Source validation and credibility scoring
    - Data aggregation from multiple perspectives
 
