@@ -25,6 +25,8 @@ A dual-model research automation system that combines web crawling with AI analy
 
 ## Workflow Process
 
+![alt text](workflow.png)
+
 1. **Input Handling**
    - Accepts natural language research queries
    - Initializes LangGraph state machine
