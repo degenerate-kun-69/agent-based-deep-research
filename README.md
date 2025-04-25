@@ -63,9 +63,25 @@ A dual-model research automation system that combines web crawling with AI analy
 2. **Tavily Integration**
    ```python
    def tavily_search(query: str) -> str:
-       # API call structure
-       # Results processing
-       return formatted_results
+    try:
+        response = requests.post(
+            "https://api.tavily.com/search",
+            headers={"Content-Type": "application/json"},
+            json={
+                "api_key": TAVILY_API_KEY,
+                "query": query,
+                "max_results": 7,
+                "search_depth": "advanced"
+            },
+            timeout=30
+        )
+        response.raise_for_status()
+        data = response.json()
+        return f"Research Summary:\n{data.get('answer', '')}\n\nSources:\n" + "\n".join(
+            [f"- {res['url']}" for res in data.get('results', [])[:5]]
+        )
+    except Exception as e:
+        return f"Research error: {str(e)}"
 
 3. **Agent System**
 
